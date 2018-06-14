@@ -1,0 +1,104 @@
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+.row {
+    height: 100%;
+}
+
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+
+}
+
+#chatbox {
+    height: 80vh;
+}
+
+
+#sketch {
+    height:70vh;
+}
+
+.status {
+    height:10vh;
+    border-bottom:1px black solid;
+    padding:10px;
+}
+
+
+.send {
+    padding: 30px;
+}
+
+#chatbox {
+    padding: 30px;
+    overflow-y: hidden;
+    overflow-wrap: break-word;
+    color: #767676;
+}
+
+#chatbox li {
+    margin-bottom: 8px;
+}
+
+.send {
+    border-top:1px black solid;
+}
+
+.send input[type='text'] {
+    margin-top: 10px;
+}
+
+.container-fluid {
+    height: 100vh;
+}
+
+.game {
+    border-left:1px black solid;
+}
+
+canvas {
+    border-bottom: 1px black solid;
+}
+
+.pallet {
+    padding: 8px;
+}
+
+.tools, .colors, .sizes, .actions {
+    vertical-align: top;
+
+    display: inline-block;
+    margin-right: 40px;
+}
+
+.tools .btn {
+    width: 100px;
+    height: 120px;
+}
+
+.colors {
+    width: 272px;
+}
+
+.colors .btn {
+    width: 35px;
+    height: 35px;
+}
+
+.colors .middle .btn {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.sizes div:nth-of-type(2) {
+    margin-top: 5px;
+}
+
+.sizes .btn {
+    width: 64px;
+    height: 55px;
+}

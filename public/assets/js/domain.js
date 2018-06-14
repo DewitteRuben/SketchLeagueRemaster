@@ -1,0 +1,329 @@
+const Domain = (function() {
+    var MAPPING_PENCIL_SIZES = {
+        DEFAULT: 4,
+        NORMAL: 6,
+        LARGE: 8,
+        BIGGER: 10
+    };
+
+    function Socket() {
+        this.socket = io();
+    }
+
+    Socket.prototype.emit = function (key, msg) {
+        this.socket.emit(key, msg);
+    };
+
+    Socket.prototype.setListener = function (key, fn) {
+        this.socket.on(key, fn);
+    };
+
+    function StrokeStorage() {
+        this.strokes = [];
+        this.lastStroke = [];
+        this.amtStrokes = 0;
+        this.amtDots = 0;
+    }
+
+    StrokeStorage.prototype.initStroke = function (color, size) {
+        var stroke = {};
+        stroke["color"] = color;
+        stroke["brushSize"] = size;
+        this.strokes.push(stroke);
+        this.lastStroke.push(stroke);
+    };
+
+    StrokeStorage.prototype.addDot = function (x, y) {
+        var curStroke = this.strokes[this.amtStrokes];
+        var lastStroke = this.lastStroke[0];
+        curStroke[this.amtDots] = [x, y];
+        lastStroke[this.amtDots] = [x, y];
+        this.amtDots++;
+    };
+
+    StrokeStorage.prototype.endStroke = function () {
+        this.amtDots = 0;
+        this.amtStrokes++;
+    };
+
+
+// TODO possible optimalisation: remove all duplicate dot coordinates
+    StrokeStorage.prototype.removeDuplicates = function () {
+
+    };
+
+    StrokeStorage.prototype.removeLastStroke = function () {
+        if (this.amtStrokes > 0) {
+            this.strokes.pop();
+            this.amtStrokes--;
+        }
+    };
+
+    function SketchPanel(id, online, width, height) {
+        var _this = this;
+
+        this.container = document.getElementById(id);
+        this.defaultColor = 'black';
+        this.backgroundColor = 'white';
+        this.brushSize = MAPPING_PENCIL_SIZES.DEFAULT;
+        this.currentColor = this.defaultColor;
+        this.drawing = true;
+        this.eraser = false;
+        this.renderer = null;
+        this.doWhileDrawing = null;
+        this.strokeStorage = new StrokeStorage();
+
+        // if (online) {
+        //     this.socket = new Socket();
+        //     this.socket.setListener("draw", (data) => {
+        //         this.drawOther(data);
+        //     });
+        //     this.socket.setListener("undo", (data) => {
+        //         this.clear();
+        //         this.drawOther(data);
+        //     });
+        // }
+
+
+        function init(sketch) {
+
+            sketch.setup = function () {
+                _this.renderer = sketch.createCanvas(width || _this.container.offsetWidth, height || _this.container.offsetHeight);
+                _this.setEventListeners();
+                sketch.strokeWeight(_this.brushSize);
+                sketch.background(_this.backgroundColor);
+                sketch.stroke(_this.defaultColor);
+            };
+
+            sketch.mousePressed = function () {
+                var brushColor = _this.eraser ? _this.backgroundColor : _this.currentColor;
+                sketch.stroke(brushColor);
+                _this.strokeStorage.initStroke(brushColor, _this.brushSize);
+                return false;
+            };
+
+            sketch.mouseReleased = function () {
+                _this.strokeStorage.addDot(sketch.pmouseX, sketch.pmouseY);
+                _this.strokeStorage.endStroke();
+                _this.strokeStorage.lastStroke.pop();
+                return false;
+            };
+
+            // for some reason have these 2 functions with the same name breaks the draw feature
+            // TODO fix: When holding down click button it will continously send data of the same location
+            sketch.draw = function () {
+                if (sketch.mouseIsPressed) {
+                    sketch.line(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY);
+                    _this.strokeStorage.addDot(sketch.pmouseX, sketch.pmouseY);
+                    _this.doWhileDrawing ? _this.doWhileDrawing(): function() {}();
+                    if (_this.socket) {
+                        _this.socket.emit("draw", _this.strokeStorage.lastStroke);
+                    }
+                }
+
+            };
+        }
+
+        this.reloadSetup = () => {
+            init.bind(this, this.p5)();
+        };
+
+        this.p5 = new p5(init, this.container);
+
+    }
+
+// TODO fix that other player can undo everyone else even though he or she is not drawing
+    SketchPanel.prototype.undo = function () {
+        this.clear();
+        this.strokeStorage.removeLastStroke();
+        this.socket.emit("undo", this.strokeStorage.strokes);
+        this.strokeStorage.strokes.forEach(coordinates => this.draw(coordinates));
+    };
+
+    SketchPanel.prototype.clear = function (removeStorage) {
+        if (removeStorage) {
+            this.strokeStorage = new StrokeStorage();
+        }
+        this.p5.background(this.backgroundColor);
+    };
+
+    SketchPanel.prototype.changeColor = function (color) {
+        this.p5.stroke(color);
+        this.currentColor = color;
+    };
+
+    SketchPanel.prototype.changeSize = function (size) {
+        this.p5.strokeWeight(MAPPING_PENCIL_SIZES[size]);
+        this.brushSize = MAPPING_PENCIL_SIZES[size];
+    };
+
+    SketchPanel.prototype.enableEraser = function () {
+        this.eraser = true;
+    };
+
+    SketchPanel.prototype.enablePencil = function () {
+        this.eraser = false;
+    };
+
+    SketchPanel.prototype.disableControls = function () {
+        this.p5.mousePressed = null;
+        this.p5.mouseReleased = null;
+        this.p5.draw = null;
+        this.drawing = false;
+    };
+
+    SketchPanel.prototype.enableControls = function () {
+        this.reloadSetup();
+        this.drawing = true;
+    };
+
+    SketchPanel.prototype.setEventListeners = function () {
+        // Unbind all window listeners and set them only on the canvas element
+        for (var e in this.p5._events) {
+            var f = this.p5._events[e];
+            window.removeEventListener(e, f, false);
+            this.p5._events[e] = null;
+            var f = this.p5['_on' + e];
+            if (f) {
+                var m = f.bind(this.p5);
+                this.renderer.elt.addEventListener(e, m, {passive: false});
+                this.p5._events[e] = m;
+            }
+        }
+    };
+
+    SketchPanel.prototype.draw = function (coordinates) {
+        this.p5.stroke(coordinates.color ? coordinates.color : this.defaultColor);
+        this.p5.strokeWeight(coordinates.brushSize ? coordinates.brushSize : this.brushSize);
+        for (var key in coordinates) {
+            if (coordinates.hasOwnProperty(key)) {
+
+                var keyPlusOne = parseInt(key) + 1;
+                var x1 = coordinates[key][0];
+                var y1 = coordinates[key][1];
+
+                this.p5.point(x1, y1);
+
+                if (coordinates[keyPlusOne]) {
+
+                    var x2 = coordinates[keyPlusOne][0];
+                    var y2 = coordinates[keyPlusOne][1];
+
+                    this.p5.line(x1, y1, x2, y2);
+                }
+            }
+        }
+    };
+
+    SketchPanel.prototype.drawOther = function (arrOfStrokes) {
+        arrOfStrokes.forEach(coordinates => this.draw(coordinates));
+    };
+
+
+    function Pallet(sketch) {
+        this.sketch = sketch;
+        this.setColorClickHandler(this.colorHandler(this.sketch));
+        this.setEraserClickHandler(this.eraseHandler(this.sketch));
+        this.setBrushClickHandler(this.brushHandler(this.sketch));
+        this.setSizeClickHandler(this.sizeHandler(this.sketch));
+        this.setUndoClickhandler(this.undoHandler(this.sketch));
+    }
+
+    Pallet.prototype.colorHandler = function (sketch) {
+        return function () {
+            var color = $(this).data("color");
+            sketch.changeColor(color);
+        }
+    };
+
+    Pallet.prototype.eraseHandler = function (sketch) {
+        return function () {
+            sketch.enableEraser();
+            $(this).prev().button("toggle");
+            $(this).button("toggle");
+        }
+    };
+
+    Pallet.prototype.brushHandler = function (sketch) {
+        return function () {
+            sketch.enablePencil();
+            $(this).next().button("toggle");
+            $(this).button("toggle");
+        }
+    };
+
+    Pallet.prototype.undoHandler = function (sketch) {
+        return function() {
+            sketch.undo();
+        }
+    };
+
+
+    Pallet.prototype.sizeHandler = function (sketch) {
+        return function () {
+            var size = $(this).data("size");
+            sketch.changeSize(size);
+            $(this).parents(".sizes").find("button").each((i, e) => {
+                $(e).removeClass("active");
+            });
+            $(this).addClass("active");
+        }
+    };
+
+    Pallet.prototype.setColorClickHandler = function (fn) {
+        $(".pallet .colors").on("click", "button", fn);
+    };
+
+    Pallet.prototype.setEraserClickHandler = function (fn) {
+        $(".pallet .tools").on("click", ".eraser", fn);
+    };
+
+    Pallet.prototype.setSizeClickHandler = function (fn) {
+        $(".pallet .sizes .default").button("toggle"); // set default size on start
+        $(".pallet .sizes").on("click", "button", fn);
+    };
+
+    Pallet.prototype.setUndoClickhandler = function(fn) {
+        $(".pallet .actions").on("click", ".undo", fn);
+    };
+
+    Pallet.prototype.setBrushClickHandler = function (fn) {
+        $(".pallet .tools .brush").button("toggle"); // enable brush on launch
+        $(".pallet .tools").on("click", ".brush", fn);
+    };
+
+
+    function Chat(chatbox, user) {
+        this.chatbox = chatbox;
+        this.user = user;
+    }
+
+    Chat.prototype.send = function (message) {
+        // this.socket.emit("client-msg", message2obj(this.user, message), data => {
+        //     this.printInChatbox(data);
+        // });
+    };
+
+
+    Chat.prototype.printInChatbox = function (data, sender, message) {
+        var msgLI = document.createElement("LI");
+        var chatbox = document.getElementById(this.chatbox);
+        msgLI.appendChild(document.createTextNode(`${data.user}: ${data.msg}`));
+        chatbox.appendChild(msgLI);
+        chatbox.scrollTop = chatbox.scrollHeight;
+    };
+
+
+    function message2obj(user, msg) {
+        return {user: user, msg: msg};
+    }
+
+
+    return {
+        SketchPanel:SketchPanel,
+        Pallet:Pallet,
+        Chat:Chat,
+        Socket:Socket,
+    }
+})();
+

@@ -1,0 +1,12 @@
+html, body {
+    height:100%;
+}
+
+input[type="text"] {
+    display: inline-block;
+    width: auto;
+}
+
+label {
+    display:block;
+}

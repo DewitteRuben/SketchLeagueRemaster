@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas</title>
+
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/materialize-colors.css">
+
+    <link rel="stylesheet" href="assets/css/screen.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css"
+          integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+
+
+</head>
+<body>
+<div class="row">
+    <div class="chat col-sm-3">
+        <div id="chatContainer">
+            <ul class="list-group" id="chatbox">
+
+            </ul>
+        </div>
+        <div class="send">
+            <form id="formSendMessage" action="/send" method="POST">
+                <div class="form-group">
+                    <input class="form-control" placeholder="Enter answer or message" type="text" name="chatmsg"
+                           id="chatmsg">
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="game col-sm-9">
+        <div class="status">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <p>Currently drawing: Ashe</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p>00:00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="sketch">
+        </div>
+        <div class="pallet">
+            <div class="colors">
+                <button type="button" class="btn btn-lg black" data-color="black"></button>
+                <button type="button" class="btn btn-lg red " data-color="#F44336"></button>
+                <button type="button" class="btn btn-lg real-red" data-color="#F44336"></button>
+                <button type="button" class="btn btn-lg red darken-1" data-color="#E53935"></button>
+                <button type="button" class="btn btn-lg pink" data-color="#e91e63"></button>
+                <button type="button" class="btn btn-lg purple" data-color="#9c27b0"></button>
+                <button type="button" class="btn btn-lg deep-purple" data-color="#673ab7"></button>
+
+                <div class="middle">
+                    <button type="button" class="btn btn-lg indigo" data-color="#3f51b5"></button>
+                    <button type="button" class="btn btn-lg blue" data-color="#2196F3"></button>
+                    <button type="button" class="btn btn-lg light-blue" data-color="#03a9f4"></button>
+                    <button type="button" class="btn btn-lg cyan" data-color="#00bcd4"></button>
+                    <button type="button" class="btn btn-lg teal" data-color="#009688"></button>
+                    <button type="button" class="btn btn-lg green" data-color="#4CAF50"></button>
+                    <button type="button" class="btn btn-lg light-green" data-color="#8bc34a"></button>
+                </div>
+
+                <button type="button" class="btn btn-lg lime" data-color="#cddc39"></button>
+                <button type="button" class="btn btn-lg yellow" data-color="#ffeb3b"></button>
+                <button type="button" class="btn btn-lg amber" data-color="#ffc107"></button>
+                <button type="button" class="btn btn-lg orange" data-color="#ff9800"></button>
+                <button type="button" class="btn btn-lg deep-orange" data-color="#ff5722"></button>
+                <button type="button" class="btn btn-lg blue-grey" data-color="#607d8b"></button>
+                <button type="button" class="btn btn-lg grey" data-color="#9e9e9e"></button>
+            </div>
+            <div class="tools">
+                <button type="button" class="brush btn btn-outline-dark btn-lg"><i class="fas fa-paint-brush fa-2x"></i>
+                </button>
+                <button type="button" class="eraser btn btn-outline-dark btn-lg"><i class="fas fa-eraser fa-2x"></i>
+                </button>
+            </div>
+            <div class="sizes">
+                <div>
+                    <button type="button" data-size="DEFAULT" class="default btn btn-outline-dark"><i class="fas fa-circle fa-xs"></i></button>
+                    <button type="button" data-size="NORMAL" class="btn btn-outline-dark"><i class="fas fa-circle"></i></button>
+                </div>
+                <div>
+                    <button type="button" data-size="LARGE" class="btn btn-outline-dark"><i class="fas fa-circle fa-lg"></i></button>
+                    <button type="button" data-size="BIGGER" class="btn btn-outline-dark"><i class="fas fa-circle fa-2x"></i></button>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="button" class="undo btn btn-outline-dark btn-lg"><i class="fas fa-redo fa-2x"></i></button>
+                <button type="button" class="clear btn btn-outline-dark btn-lg"><i class="fas fa-trash-alt fa-2x"></i>
+                </button>
+                <button type="button" class="skip btn btn-outline-dark btn-lg"><i class="fas fa-step-forward fa-2x"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script src="assets/js/jquery-3.3.1.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/p5.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/assets/js/domain.js"></script>
+<script src="/assets/js/index.js"></script>
+<script src="/assets/js/game.js"></script>
+</body>
+</html>
