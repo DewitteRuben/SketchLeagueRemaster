@@ -17,13 +17,18 @@
 <body>
 <div class="row">
     <div class="chat col-sm-3">
+        <div class="container usersContainer">
+            <ul class="users">
+
+            </ul>
+        </div>
         <div id="chatContainer">
             <ul class="list-group" id="chatbox">
 
             </ul>
         </div>
         <div class="send">
-            <form id="formSendMessage" action="/send" method="POST">
+            <form id="formSendMessage">
                 <div class="form-group">
                     <input class="form-control" placeholder="Enter answer or message" type="text" name="chatmsg"
                            id="chatmsg">
@@ -35,11 +40,15 @@
         <div class="status">
             <div class="container">
                 <div class="row">
-                    <div class="col-sm-6">
+                    <div class="col-sm-5">
                         <p>Currently drawing: Ashe</p>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <p>00:00</p>
+                    </div>
+                    <div class="col-sm-3">
+                        <button type="button" class="start btn btn-outline-dark btn-lg"><i
+                                class="fas fa-play"></i></button>
                     </div>
                 </div>
             </div>
@@ -82,16 +91,21 @@
             </div>
             <div class="sizes">
                 <div>
-                    <button type="button" data-size="DEFAULT" class="default btn btn-outline-dark"><i class="fas fa-circle fa-xs"></i></button>
-                    <button type="button" data-size="NORMAL" class="btn btn-outline-dark"><i class="fas fa-circle"></i></button>
+                    <button type="button" data-size="DEFAULT" class="default btn btn-outline-dark"><i
+                            class="fas fa-circle fa-xs"></i></button>
+                    <button type="button" data-size="NORMAL" class="btn btn-outline-dark"><i class="fas fa-circle"></i>
+                    </button>
                 </div>
                 <div>
-                    <button type="button" data-size="LARGE" class="btn btn-outline-dark"><i class="fas fa-circle fa-lg"></i></button>
-                    <button type="button" data-size="BIGGER" class="btn btn-outline-dark"><i class="fas fa-circle fa-2x"></i></button>
+                    <button type="button" data-size="LARGE" class="btn btn-outline-dark"><i
+                            class="fas fa-circle fa-lg"></i></button>
+                    <button type="button" data-size="BIGGER" class="btn btn-outline-dark"><i
+                            class="fas fa-circle fa-2x"></i></button>
                 </div>
             </div>
             <div class="actions">
-                <button type="button" class="undo btn btn-outline-dark btn-lg"><i class="fas fa-redo fa-2x"></i></button>
+                <button type="button" class="undo btn btn-outline-dark btn-lg"><i class="fas fa-redo fa-2x"></i>
+                </button>
                 <button type="button" class="clear btn btn-outline-dark btn-lg"><i class="fas fa-trash-alt fa-2x"></i>
                 </button>
                 <button type="button" class="skip btn btn-outline-dark btn-lg"><i class="fas fa-step-forward fa-2x"></i>

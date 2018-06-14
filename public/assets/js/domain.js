@@ -1,4 +1,4 @@
-const Domain = (function() {
+const Domain = (function () {
     var MAPPING_PENCIL_SIZES = {
         DEFAULT: 4,
         NORMAL: 6,
@@ -10,12 +10,16 @@ const Domain = (function() {
         this.socket = io();
     }
 
+    Socket.prototype.setListener = function(event, fn) {
+        this.socket.on(event, fn);
+    };
+
     Socket.prototype.emit = function (key, msg) {
         this.socket.emit(key, msg);
     };
 
-    Socket.prototype.setListener = function (key, fn) {
-        this.socket.on(key, fn);
+    Socket.prototype.getID = function () {
+        return this.socket.id;
     };
 
     function StrokeStorage() {
@@ -115,7 +119,8 @@ const Domain = (function() {
                 if (sketch.mouseIsPressed) {
                     sketch.line(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY);
                     _this.strokeStorage.addDot(sketch.pmouseX, sketch.pmouseY);
-                    _this.doWhileDrawing ? _this.doWhileDrawing(): function() {}();
+                    _this.doWhileDrawing ? _this.doWhileDrawing() : function () {
+                    }();
                     if (_this.socket) {
                         _this.socket.emit("draw", _this.strokeStorage.lastStroke);
                     }
@@ -253,7 +258,7 @@ const Domain = (function() {
     };
 
     Pallet.prototype.undoHandler = function (sketch) {
-        return function() {
+        return function () {
             sketch.undo();
         }
     };
@@ -283,7 +288,7 @@ const Domain = (function() {
         $(".pallet .sizes").on("click", "button", fn);
     };
 
-    Pallet.prototype.setUndoClickhandler = function(fn) {
+    Pallet.prototype.setUndoClickhandler = function (fn) {
         $(".pallet .actions").on("click", ".undo", fn);
     };
 
@@ -293,37 +298,50 @@ const Domain = (function() {
     };
 
 
-    function Chat(chatbox, user) {
+    function Chat(chatbox, user, socket) {
         this.chatbox = chatbox;
         this.user = user;
+        this.socket = socket;
     }
 
+
     Chat.prototype.send = function (message) {
-        // this.socket.emit("client-msg", message2obj(this.user, message), data => {
-        //     this.printInChatbox(data);
+        // TODO figure out why the CB gives undefined
+        // this.socket.emit("client-msg", message2obj(this.user, message), (data) => {
+        //     this.printInChatbox(`${this.user}: ${data.message}`);
         // });
+
+        this.socket.emit("client", message2obj(this.user, message));
+        this.printInChatbox(this.user, message);
     };
 
+    Chat.prototype.updateUserList = function (userList) {
+        let $userList = $(".users");
+        $userList.html("");
+        for (let socketID in userList) {
+            $userList.append("<li>" + userList[socketID] + "</li>");
+        }
+    };
 
-    Chat.prototype.printInChatbox = function (data, sender, message) {
+    Chat.prototype.printInChatbox = function (sender, message) {
         var msgLI = document.createElement("LI");
         var chatbox = document.getElementById(this.chatbox);
-        msgLI.appendChild(document.createTextNode(`${data.user}: ${data.msg}`));
+        msgLI.appendChild(document.createTextNode(`${sender}: ${message}`));
         chatbox.appendChild(msgLI);
         chatbox.scrollTop = chatbox.scrollHeight;
     };
 
 
     function message2obj(user, msg) {
-        return {user: user, msg: msg};
+        return {user: user, message: msg};
     }
 
 
     return {
-        SketchPanel:SketchPanel,
-        Pallet:Pallet,
-        Chat:Chat,
-        Socket:Socket,
+        SketchPanel: SketchPanel,
+        Pallet: Pallet,
+        Chat: Chat,
+        Socket: Socket,
     }
 })();
 

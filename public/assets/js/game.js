@@ -1,35 +1,51 @@
-// const Game = (function() {
-//     function Game(sketch, chat, socket) {
-//         this.sketch = sketch;
-//         this.chat = chat;
-//         this.socket = socket;
-//     }
-//
-//     Game.prototype.waitForPlayers = function() {
-//
-//     };
+const Controller = (function () {
+    function Controller(name) {
+        this.socket = new Domain.Socket();
+        this.chat = new Domain.Chat("chatbox", name, this.socket);
+        this.initChatListeners();
 
-// /*        this.socket = io();
-//         this.socket.on("client-msg", data => {
-//             this.printInChatbox(data);
-//         });
-//         this.socket.on("correctGuess", data => {
-//             this.printInChatbox(data);
-//         });*/
-//
-//
-//
-//     return Game;
-//
-// })();
+    }
 
-(function() {
+    Controller.prototype.initChatListeners = function () {
+        this.socket.setListener("new", () => {
+            this.socket.emit("new", {user: this.chat.user, id: this.socket.getID()});
+        });
+        this.socket.setListener("chat-message", (data) => {
+            this.chat.printInChatbox(data.sender, data.message);
+        });
 
-    var socket = new Domain.Socket();
-    socket.setListener("game", function(data) {
-        console.log(data);
+        this.socket.setListener("userList", (data) => {
+            this.chat.updateUserList(data.message);
+        });
+    };
+
+    return Controller;
+
+})();
+
+(function () {
+
+    let username = sessionStorage.getItem("name");
+
+    if (!username)
+        window.location = "login.html";
+
+    let game = new Controller(username);
+
+    document.getElementById("formSendMessage").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        if (this[0].value.trim().length > 0) {
+            console.log(game.chat);
+            game.chat.send(this[0].value);
+        }
+
+        this[0].value = "";
     });
 
 
-    socket.socket.emit("game", "test");
+    $(".start").on("click", function () {
+        game.socket.emit("start");
+    });
+
 })();

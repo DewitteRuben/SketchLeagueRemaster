@@ -13,8 +13,14 @@ body {
 
 }
 
+.usersContainer {
+    border-bottom:1px black solid;
+    height: 10vh;
+    overflow-y:scroll;
+}
+
 #chatbox {
-    height: 80vh;
+    height: 70vh;
 }
 
 
