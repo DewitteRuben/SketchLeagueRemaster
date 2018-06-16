@@ -11,10 +11,8 @@ const MESSAGES = {
 var currentWordToGuess = "Ekko";
 
 module.exports = function (io) {
-    let serverSocket = new ServerSocket(io);
-
     let game = new Game();
-    game.getRandomWord();
+    let serverSocket = new ServerSocket(io, game);
 
     router.post("/join", function (req, res, next) {
         let exists = serverSocket.userstorage.exists(req.body.username);

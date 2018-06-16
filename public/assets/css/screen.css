@@ -13,14 +13,29 @@ body {
 
 }
 
-.usersContainer {
-    border-bottom:1px black solid;
-    height: 10vh;
+.users {
+    border-bottom:1px lightgray solid;
+    height:15vh;
     overflow-y:scroll;
+    padding-left:25px;
+    padding-right:25px;
+}
+
+.users p {
+    margin-bottom: 0;
 }
 
 #chatbox {
-    height: 70vh;
+    height:65vh;
+    max-height: 65vh;
+}
+
+.name {
+    display:inline-block;
+}
+
+.privileges {
+    float:right;
 }
 
 
@@ -28,15 +43,35 @@ body {
     height:70vh;
 }
 
-.status {
+.overview {
     height:10vh;
-    border-bottom:1px black solid;
+    border-bottom:1px lightgray solid;
     padding:10px;
 }
 
+.timer {
+    font-size:1.75rem;
+}
+
+.self {
+    color:green;
+}
+
+.hidden {
+    display:none;
+}
+
+.server {
+    color:#03a9f4;
+}
+
+.other {
+    color:#ffb300;
+}
 
 .send {
     padding: 30px;
+    height:auto;
 }
 
 #chatbox {
@@ -51,7 +86,7 @@ body {
 }
 
 .send {
-    border-top:1px black solid;
+    border-top:1px lightgrey solid;
 }
 
 .send input[type='text'] {
@@ -63,11 +98,11 @@ body {
 }
 
 .game {
-    border-left:1px black solid;
+    border-left:1px lightgrey solid;
 }
 
 canvas {
-    border-bottom: 1px black solid;
+    border-bottom: 1px lightgray solid;
 }
 
 .pallet {

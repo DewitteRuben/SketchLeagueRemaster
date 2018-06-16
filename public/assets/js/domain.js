@@ -10,7 +10,7 @@ const Domain = (function () {
         this.socket = io();
     }
 
-    Socket.prototype.setListener = function(event, fn) {
+    Socket.prototype.setListener = function (event, fn) {
         this.socket.on(event, fn);
     };
 
@@ -63,7 +63,7 @@ const Domain = (function () {
         }
     };
 
-    function SketchPanel(id, online, width, height) {
+    function SketchPanel(id, socket, width, height) {
         var _this = this;
 
         this.container = document.getElementById(id);
@@ -74,19 +74,18 @@ const Domain = (function () {
         this.drawing = true;
         this.eraser = false;
         this.renderer = null;
-        this.doWhileDrawing = null;
         this.strokeStorage = new StrokeStorage();
+        this.socket = socket;
 
-        // if (online) {
-        //     this.socket = new Socket();
-        //     this.socket.setListener("draw", (data) => {
-        //         this.drawOther(data);
-        //     });
-        //     this.socket.setListener("undo", (data) => {
-        //         this.clear();
-        //         this.drawOther(data);
-        //     });
-        // }
+        if (this.socket) {
+            this.socket.setListener("draw", (data) => {
+                this.drawOther(data);
+            });
+            this.socket.setListener("undo", (data) => {
+                this.clear();
+                this.drawOther(data);
+            });
+        }
 
 
         function init(sketch) {
@@ -119,8 +118,6 @@ const Domain = (function () {
                 if (sketch.mouseIsPressed) {
                     sketch.line(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY);
                     _this.strokeStorage.addDot(sketch.pmouseX, sketch.pmouseY);
-                    _this.doWhileDrawing ? _this.doWhileDrawing() : function () {
-                    }();
                     if (_this.socket) {
                         _this.socket.emit("draw", _this.strokeStorage.lastStroke);
                     }
@@ -141,7 +138,7 @@ const Domain = (function () {
     SketchPanel.prototype.undo = function () {
         this.clear();
         this.strokeStorage.removeLastStroke();
-        this.socket.emit("undo", this.strokeStorage.strokes);
+        if (this.socket) this.socket.emit("undo", this.strokeStorage.strokes);
         this.strokeStorage.strokes.forEach(coordinates => this.draw(coordinates));
     };
 
@@ -171,6 +168,7 @@ const Domain = (function () {
     };
 
     SketchPanel.prototype.disableControls = function () {
+        this.clear(true);
         this.p5.mousePressed = null;
         this.p5.mouseReleased = null;
         this.p5.draw = null;
@@ -312,23 +310,32 @@ const Domain = (function () {
         // });
 
         this.socket.emit("client", message2obj(this.user, message));
-        this.printInChatbox(this.user, message);
+        this.printInChatbox(this.user, message, "self");
     };
 
-    Chat.prototype.updateUserList = function (userList) {
+    Chat.prototype.updateUserList = function (userList, host, me) {
         let $userList = $(".users");
         $userList.html("");
         for (let socketID in userList) {
-            $userList.append("<li>" + userList[socketID] + "</li>");
+            if (userList.hasOwnProperty(socketID)) {
+                let username = userList[socketID];
+                let isMe = socketID === me ? "(me)" : "";
+                let isHost = socketID === host ? "<i class='fas fa-key'></i>" : "";
+
+                let HTML = `<div class="user" id="${socketID}">
+                   <p class="name">${username} ${isMe}</p><span class="privileges">${isHost} <span class="status"></span> </span>
+                   <p class="score">0</p>
+                </div>`;
+
+                $userList.append(HTML);
+            }
         }
     };
 
-    Chat.prototype.printInChatbox = function (sender, message) {
-        var msgLI = document.createElement("LI");
-        var chatbox = document.getElementById(this.chatbox);
-        msgLI.appendChild(document.createTextNode(`${sender}: ${message}`));
-        chatbox.appendChild(msgLI);
-        chatbox.scrollTop = chatbox.scrollHeight;
+    Chat.prototype.printInChatbox = function (sender, message, type) {
+        var chatbox = $(`#${this.chatbox}`);
+        chatbox.append(`<li><span class="${type}">${sender}:</span> ${message}</li>`)
+        chatbox[0].scrollTop = chatbox[0].scrollHeight;
     };
 
 

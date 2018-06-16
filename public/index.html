@@ -17,16 +17,11 @@
 <body>
 <div class="row">
     <div class="chat col-sm-3">
-        <div class="container usersContainer">
-            <ul class="users">
-
-            </ul>
+        <div class="users">
         </div>
-        <div id="chatContainer">
-            <ul class="list-group" id="chatbox">
+        <ul class="list-group" id="chatbox">
 
-            </ul>
-        </div>
+        </ul>
         <div class="send">
             <form id="formSendMessage">
                 <div class="form-group">
@@ -37,14 +32,14 @@
         </div>
     </div>
     <div class="game col-sm-9">
-        <div class="status">
+        <div class="overview">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-5">
-                        <p>Currently drawing: Ashe</p>
+                        <p><span class="champion"></span></p>
                     </div>
                     <div class="col-sm-4">
-                        <p>00:00</p>
+                        <p class="timer">02:00</p>
                     </div>
                     <div class="col-sm-3">
                         <button type="button" class="start btn btn-outline-dark btn-lg"><i
@@ -111,7 +106,6 @@
                 <button type="button" class="skip btn btn-outline-dark btn-lg"><i class="fas fa-step-forward fa-2x"></i>
                 </button>
             </div>
-
         </div>
     </div>
 </div>
@@ -119,8 +113,8 @@
 <script src="assets/js/bootstrap.min.js"></script>
 <script src="assets/js/p5.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/assets/js/domain.js"></script>
-<script src="/assets/js/index.js"></script>
-<script src="/assets/js/game.js"></script>
+<script src="assets/js/domain.js"></script>
+<script src="assets/js/index.js"></script>
+<script src="assets/js/gamePage.js"></script>
 </body>
 </html>

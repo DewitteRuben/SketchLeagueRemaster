@@ -12,6 +12,10 @@ UserStorage.prototype.add = function (socketID, user) {
     }
 };
 
+UserStorage.prototype.getHost = function() {
+    return Object.keys(this.users)[0];
+};
+
 
 UserStorage.prototype.drop = function(socketID) {
     if (socketID in this.users) {
