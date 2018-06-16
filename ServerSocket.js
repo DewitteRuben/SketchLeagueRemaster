@@ -14,14 +14,14 @@ function ServerSocket(io, game) {
     this.game.io = io;
     let self = this;
     io.on('connection', function (socket) {
+        io.sockets.emit("all", socket.id);
 
 
         socket.emit("new", "");
 
         socket.on("new", function (data) {
-            self.userstorage.add(data.id, data.user);
 
-            console.log("added", data.id, data.user);
+            self.userstorage.add(data.id, data.user);
 
             io.sockets.emit("userList", {
                 message: self.userstorage.users,
@@ -43,10 +43,10 @@ function ServerSocket(io, game) {
             }
         });
 
-        socket.on("disconnecting", function() {
+        socket.on("disconnecting", function(reason) {
 
-            console.log("attempting to disconnect", socket.id);
-            console.log(self.userstorage.users);
+
+            console.log("disconnecting", socket.id, reason);
             // on disconnect get the disconnecting user from storage using it's socketID
             let user = self.userstorage.users[socket.id];
 
@@ -71,8 +71,11 @@ function ServerSocket(io, game) {
 
         });
 
-        socket.on("disconnect", function (data) {
+        socket.on("disconnect", function (reason) {
             // stop the current game if someone disconnects
+
+            console.log("disconnected", socket.id, reason);
+
             if (self.game.started) {
                 self.game.stop();
             }

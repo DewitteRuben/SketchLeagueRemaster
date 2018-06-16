@@ -216,6 +216,16 @@ const Domain = (function () {
                 }
             }
         }
+        this.resetColor();
+        this.resetSize();
+    };
+
+    SketchPanel.prototype.resetSize = function() {
+        this.p5.strokeWeight(this.brushSize);
+    };
+
+    SketchPanel.prototype.resetColor = function() {
+        this.p5.stroke(this.currentColor);
     };
 
     SketchPanel.prototype.drawOther = function (arrOfStrokes) {
@@ -362,6 +372,10 @@ const Domain = (function () {
             this.chat.printInChatbox(data.sender, data.message, data.type);
         });
 
+        this.socket.setListener("all" , data => {
+            console.log(data)
+        });
+
         this.socket.setListener("userList", (data) => {
             this.chat.updateUserList(data.message, data.host, this.socket.getID());
         });
@@ -381,12 +395,6 @@ const Domain = (function () {
             $(".timer").text(time);
         });
     };
-
-    function setStatusEveryOtherUser(status) {
-        $(".users").each(function (index, el) {
-            $(el).find(".status").html(status);
-        });
-    }
 
     Controller.prototype.initGameListeners = function () {
         this.socket.setListener("wait", (player) => {
