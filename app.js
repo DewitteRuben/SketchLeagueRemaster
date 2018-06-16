@@ -1,10 +1,14 @@
+
+
+
+
 let express = require('express');
 let path = require('path');
 let http = require('http');
 let session = require("express-session");
 let app = express();
 const bodyParser = require('body-parser');
-const port = 3000;
+const port = Number(process.env.PORT || '3000');
 app.io = require('socket.io')();
 let indexRouter = require('./routes/index')(app.io); // router met IO
 
