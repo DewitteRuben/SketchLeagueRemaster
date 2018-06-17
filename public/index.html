@@ -39,7 +39,13 @@
             <div class="container">
                 <div class="row">
                     <div class="col-sm-5">
-                        <p><span class="champion"></span></p>
+                        <p>
+                            <span class="champion"></span>
+                            <button id="champSplash" type="button" class="btn btn-secondary hidden champSplash">
+                                <i class="fas fa-image"></i>
+                            </button>
+                            <!--<a href="#" class="hidden champSplash"></a>-->
+                        </p>
                     </div>
                     <div class="col-sm-4">
                         <p class="timer">02:00</p>
@@ -104,15 +110,16 @@
             <div class="actions">
                 <button type="button" class="undo btn btn-outline-dark btn-lg"><i class="fas fa-redo fa-2x"></i>
                 </button>
-                <button type="button" class="clear btn btn-outline-dark btn-lg"><i class="fas fa-trash-alt fa-2x"></i>
+                <button type="button" disabled class="clear btn btn-outline-dark btn-lg"><i class="fas fa-trash-alt fa-2x"></i>
                 </button>
-                <button type="button" class="skip btn btn-outline-dark btn-lg"><i class="fas fa-step-forward fa-2x"></i>
+                <button type="button" disabled class="skip btn btn-outline-dark btn-lg"><i class="fas fa-step-forward fa-2x"></i>
                 </button>
             </div>
         </div>
     </div>
 </div>
 <script src="assets/js/jquery-3.3.1.min.js"></script>
+<script src="assets/js/popper.min.js"></script>
 <script src="assets/js/bootstrap.min.js"></script>
 <script src="assets/js/p5.js"></script>
 <script src="/socket.io/socket.io.js"></script>

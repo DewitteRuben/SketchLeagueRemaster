@@ -1,18 +1,19 @@
-let champions = require('./champion.json');
+let championsData = require('./champion.json');
 let Timer = require('easytimer.js');
 
-function getChampionNames() {
-    let names = [];
-    for (let key in champions.data) {
-        if (champions.data.hasOwnProperty(key)){
-            names.push(champions.data[key].name);
+function getChampions() {
+    let champions = [];
+    for (let key in championsData.data) {
+        if (championsData.data.hasOwnProperty(key)) {
+            champions.push(championsData.data[key]);
         }
     }
-    return names;
+    return champions;
 }
-function getRandomChampionName() {
-    let names = getChampionNames();
-    return names[getRandomIntIncl(names.length)]
+
+function getRandomChampion() {
+    let champions = getChampions();
+    return champions[getRandomIntIncl(champions.length)];
 }
 
 // range: [min, max[
@@ -61,7 +62,7 @@ Game.prototype.passControls = function (player) {
     this.players.setAsArtist(player);
     this.io.sockets.emit("updateStatus", this.players.getList());
     this.io.sockets.emit("wait", playerObj.name);
-    this.io.to(player).emit("play", this.word);
+    this.io.to(player).emit("play", {word: this.word, image: this.image});
     this.io.sockets.emit("chat-message", {
         message: `${playerObj.name} is now drawing!`,
         sender: "Server",
@@ -170,7 +171,7 @@ Game.prototype.initTimer = function () {
     });
 };
 
-Game.prototype.waitAndSwitchToNextPlayer = function() {
+Game.prototype.waitAndSwitchToNextPlayer = function () {
     this.timer.pause();
     this.io.sockets.emit("nextPlayer");
     this.io.sockets.emit("chat-message", {
@@ -184,7 +185,9 @@ Game.prototype.waitAndSwitchToNextPlayer = function() {
 };
 
 Game.prototype.getNewWord = function () {
-    this.word = getRandomChampionName();
+    let champion = getRandomChampion();
+    this.word = champion.name;
+    this.image = `http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champion.id}_0.jpg`;
 };
 
 Game.prototype.reset = function () {
@@ -192,6 +195,7 @@ Game.prototype.reset = function () {
     this.players = new PlayerRepo();
     this.played = [];
     this.round = 0;
+    this.image = null;
     this.word = null;
 };
 

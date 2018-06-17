@@ -395,14 +395,24 @@ const Domain = (function () {
     };
 
     Controller.prototype.initGameListeners = function () {
+        let $championSplash = $(".champSplash");
+
         this.socket.setListener("wait", (player) => {
             $(".champion").text(`${player} is currently drawing...`);
+            $championSplash.addClass("hidden");
             this.sketch.disableControls();
             $(".pallet").addClass("hidden");
         });
 
-        this.socket.setListener("play", (word) => {
-            $(".champion").text(`You are drawing: ${word}`);
+        this.socket.setListener("play", (data) => {
+            $(".champion").text(`You are drawing: ${data.word}`);
+            $championSplash.removeClass("hidden");
+            let img = `<img src="${data.image}" alt="${data.word}" title="${data.word}" style="width:100%;"/>`;
+            $('#champSplash').popover({
+                placement: 'bottom',
+                content: img,
+                html: true
+            });
             this.sketch.enableControls();
             $(".pallet").removeClass("hidden");
         });
