@@ -10,3 +10,8 @@ input[type="text"] {
 label {
     display:block;
 }
+
+.about {
+    position: absolute;
+    right:15px;
+}
