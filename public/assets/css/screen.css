@@ -41,6 +41,7 @@ body {
 
 #sketch {
     height:70vh;
+
 }
 
 .overview {
@@ -103,6 +104,8 @@ body {
 
 canvas {
     border-bottom: 1px lightgray solid;
+    width:100%;
+    height:auto;
 }
 
 .pallet {

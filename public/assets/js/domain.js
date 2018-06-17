@@ -183,14 +183,18 @@ const Domain = (function () {
     SketchPanel.prototype.setEventListeners = function () {
         // Unbind all window listeners and set them only on the canvas element
         for (var e in this.p5._events) {
-            var f = this.p5._events[e];
-            window.removeEventListener(e, f, false);
-            this.p5._events[e] = null;
-            var f = this.p5['_on' + e];
-            if (f) {
-                var m = f.bind(this.p5);
-                this.renderer.elt.addEventListener(e, m, {passive: false});
-                this.p5._events[e] = m;
+            if(this.p5._events.hasOwnProperty(e)) {
+                var f = this.p5._events[e];
+                if (e !== "mouseup")
+                    window.removeEventListener(e, f, false);
+                this.p5._events[e] = null;
+                var f = this.p5['_on' + e];
+                if (f) {
+                    var m = f.bind(this.p5);
+                    if (e !== "mouseup")
+                        this.renderer.elt.addEventListener(e, m, {passive: false});
+                    this.p5._events[e] = m;
+                }
             }
         }
     };
@@ -370,10 +374,6 @@ const Domain = (function () {
         });
         this.socket.setListener("chat-message", (data) => {
             this.chat.printInChatbox(data.sender, data.message, data.type);
-        });
-
-        this.socket.setListener("all" , data => {
-            console.log(data)
         });
 
         this.socket.setListener("userList", (data) => {

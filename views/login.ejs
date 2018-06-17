@@ -17,6 +17,9 @@
 <div class="container d-flex h-100">
     <div class="align-self-center mx-auto">
         <form method="post" action="/join">
+            <% if (locals.error) { %>
+            <p class="red-text"><%= error %></p>
+            <% } %>
             <label for="username">Enter a name:</label>
             <input type="text" class="form-control" id="username" name="username" placeholder="John Doe">
             <button type="submit" class="btn btn-primary">Enter</button>

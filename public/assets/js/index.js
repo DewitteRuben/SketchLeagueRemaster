@@ -2,7 +2,7 @@
 
     let username = sessionStorage.getItem("name");
     if (!username) {
-        window.location = "login.html";
+        window.location = "login";
     } else {
         let game = new Domain.Controller(username);
         document.getElementById("formSendMessage").addEventListener("submit", function (e) {

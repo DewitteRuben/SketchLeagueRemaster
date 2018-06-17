@@ -3,23 +3,24 @@ var router = express.Router();
 let ServerSocket = require("../ServerSocket");
 let Game = require("../game");
 
-const MESSAGES = {
-    USER_CORRECT: "You correctly guessed the answer: ",
-    BROADCAST_CORRECT: " correctly guessed the answer: ",
-};
-
-var currentWordToGuess = "Ekko";
-
 module.exports = function (io) {
     let game = new Game();
     let serverSocket = new ServerSocket(io, game);
+
+    router.get("/*", function(req, res, next) {
+        res.render("login");
+    });
+
+    router.get("/login", function (req, res, next) {
+        res.render("login");
+    });
 
     router.post("/join", function (req, res, next) {
         let exists = serverSocket.userstorage.exists(req.body.username);
         if (!exists) {
             res.redirect("/index.html");
         } else {
-            res.redirect("/login.html");
+            res.render("login", {error: `Username ${req.body.username} already exists!`});
         }
     });
 
