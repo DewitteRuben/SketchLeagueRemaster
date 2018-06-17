@@ -183,16 +183,14 @@ const Domain = (function () {
     SketchPanel.prototype.setEventListeners = function () {
         // Unbind all window listeners and set them only on the canvas element
         for (var e in this.p5._events) {
-            if(this.p5._events.hasOwnProperty(e)) {
+            if (this.p5._events.hasOwnProperty(e)) {
                 var f = this.p5._events[e];
-                if (e !== "mouseup")
-                    window.removeEventListener(e, f, false);
+                window.removeEventListener(e, f, false);
                 this.p5._events[e] = null;
                 var f = this.p5['_on' + e];
                 if (f) {
                     var m = f.bind(this.p5);
-                    if (e !== "mouseup")
-                        this.renderer.elt.addEventListener(e, m, {passive: false});
+                    this.renderer.elt.addEventListener(e, m, {passive: false});
                     this.p5._events[e] = m;
                 }
             }
@@ -224,11 +222,11 @@ const Domain = (function () {
         this.resetSize();
     };
 
-    SketchPanel.prototype.resetSize = function() {
+    SketchPanel.prototype.resetSize = function () {
         this.p5.strokeWeight(this.brushSize);
     };
 
-    SketchPanel.prototype.resetColor = function() {
+    SketchPanel.prototype.resetColor = function () {
         this.p5.stroke(this.currentColor);
     };
 
@@ -415,10 +413,9 @@ const Domain = (function () {
     };
 
 
-
     return {
         SketchPanel: SketchPanel,
-        Controller:Controller,
+        Controller: Controller,
         Pallet: Pallet,
         Chat: Chat,
         Socket: Socket,

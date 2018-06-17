@@ -3,16 +3,16 @@ function ChatHelper(word, guess) {
     this.guess = guess;
 }
 
-ChatHelper.prototype.getLongest = function() {
-    return this.word.length > this.guess.length ? this.word: this.guess;
+ChatHelper.prototype.getLongest = function () {
+    return this.word.length > this.guess.length ? this.word : this.guess;
 };
 
 // ignores case and accent
-ChatHelper.prototype.isEqual = function() {
-    return this.word.localeCompare(this.guess, {sensitivity: 'base'}) === 0;
+ChatHelper.prototype.isEqual = function () {
+    return this.word.localeCompare(this.guess, undefined, {sensitivity: 'base'}) === 0;
 };
 
-ChatHelper.prototype.getLettersOff = function() {
+ChatHelper.prototype.getLettersOff = function () {
     let max = this.getLongest().length;
     let amount = 0;
     for (let i = 0; i < max; i++) {

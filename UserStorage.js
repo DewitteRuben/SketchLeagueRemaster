@@ -1,3 +1,5 @@
+let compareBase = require("./util");
+
 function UserStorage() {
     this.users = {};
     this.amount = 0;
@@ -12,12 +14,13 @@ UserStorage.prototype.add = function (socketID, user) {
     }
 };
 
-UserStorage.prototype.getHost = function() {
+UserStorage.prototype.getHost = function () {
     return Object.keys(this.users)[0];
 };
 
 
-UserStorage.prototype.drop = function(socketID) {
+UserStorage.prototype.drop = function (socketID) {
+
     if (socketID in this.users) {
         delete this.users[socketID];
         this.amount--;
@@ -26,9 +29,9 @@ UserStorage.prototype.drop = function(socketID) {
     }
 };
 
-UserStorage.prototype.exists = function(username) {
+UserStorage.prototype.exists = function (username) {
     for (let key in this.users) {
-        if (this.users[key].includes(username)) {
+        if (compareBase(this.users[key], username)) {
             return true;
         }
     }
