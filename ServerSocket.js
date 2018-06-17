@@ -43,7 +43,7 @@ function ServerSocket(io, game) {
             }
         });
 
-        socket.on("disconnecting", function(reason) {
+        socket.on("disconnecting", function (reason) {
 
 
             console.log("disconnecting", socket.id, reason);
@@ -90,12 +90,20 @@ function ServerSocket(io, game) {
                     io.sockets.emit("chat-message", {
                         sender: "Server",
                         message: `${data.user} found the answer!`,
-                        type:"server"
+                        type: "server"
                     });
                     self.game.wasCorrectlyAnsweredBy(socket.id);
+                } else {
+                    let lettersOff = chathelper.getLettersOff();
+                    if (lettersOff <= 2) {
+                        socket.emit("chat-message", {
+                            sender: "Server",
+                            message: `You are ${lettersOff} ${lettersOff > 1 ? "letters" : "letter"} off`,
+                            type: "server"
+                        });
+                    }
                 }
             }
-
         });
 
         function isHost() {
