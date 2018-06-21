@@ -1,7 +1,3 @@
-
-
-
-
 let express = require('express');
 let path = require('path');
 let http = require('http');

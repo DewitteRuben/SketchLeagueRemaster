@@ -168,6 +168,7 @@ Game.prototype.initTimer = function () {
     });
     this.timer.addEventListener('targetAchieved', (e) => {
         this.waitAndSwitchToNextPlayer();
+        return false;
     });
 };
 
