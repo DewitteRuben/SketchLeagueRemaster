@@ -93,7 +93,7 @@ function ServerSocket(io, game) {
                         type: "server"
                     });
                     self.game.wasCorrectlyAnsweredBy(socket.id);
-                } else {
+                } else if (!chathelper.isEqual() && !self.game.isPlaying(socket.id) && !self.game.hasAlreadyAnswered(socket.id)) {
                     let lettersOff = chathelper.getLettersOff();
                     if (lettersOff <= 2) {
                         socket.emit("chat-message", {

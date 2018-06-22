@@ -1,5 +1,6 @@
 let championsData = require('./champion.json');
 let Timer = require('easytimer.js');
+let compareBase = require("./util");
 
 function getChampions() {
     let champions = [];
@@ -40,8 +41,6 @@ Game.prototype.startNextRound = function () {
     this.played = [];
     this.correctGuesses = [];
     this.io.sockets.emit("chat-message", {message: `Round ${this.round}`, sender: "Server", type: "server"});
-    // this.waitAndSwitchToNextPlayer();
-    // this.getNewWord();
     this.initNextPlayer();
 };
 
@@ -50,12 +49,13 @@ Game.prototype.getNextPlayer = function () {
     while (this.played.includes(nextPlayer)) {
         nextPlayer = this.players.getRandomPlayer().id;
     }
+    this.currentPlayer = this.players.findById(nextPlayer);
     return nextPlayer;
 };
 
 
 Game.prototype.isNextRound = function () {
-    return this.players.getLength() === this.played.length;
+    return this.players.getLength() === this.played.length || this.haveAllGuessedCorrectly();
 };
 
 Game.prototype.passControls = function (player) {
@@ -135,6 +135,7 @@ function Game() {
     this.roundTime = 120;
     this.score = new Score();
     this.played = [];
+    this.currentPlayer = null;
     this.correctGuesses = [];
     this.timer = new Timer();
     this.round = 1;
@@ -149,7 +150,7 @@ Game.prototype.wasCorrectlyAnsweredBy = function (playerid) {
     this.players.findById(playerid).addScore(1000, this.correctGuesses.length);
     this.correctGuesses.push(playerid);
     if (this.haveAllGuessedCorrectly()) {
-        this.startNextRound();
+        this.waitAndSwitchToNextPlayer();
     }
 };
 
@@ -159,10 +160,6 @@ Game.prototype.haveAllGuessedCorrectly = function () {
 
 Game.prototype.isPlaying = function (id) {
     return this.players.findById(id).isDrawing;
-};
-
-Game.prototype.enableSuddenDeath = function () {
-
 };
 
 Game.prototype.startTimer = function() {
@@ -180,7 +177,7 @@ Game.prototype.initTimer = function () {
 };
 
 Game.prototype.waitAndSwitchToNextPlayer = function () {
-    // this.timer.pause();
+    this.timer.pause();
     this.io.sockets.emit("nextPlayer");
     this.io.sockets.emit("chat-message", {
         message: `The correct answer was: ${this.word}!`,
