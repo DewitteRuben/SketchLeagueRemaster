@@ -402,13 +402,14 @@ const Domain = (function () {
             $championSplash.addClass("hidden");
             this.sketch.disableControls();
             $(".pallet").addClass("hidden");
+            $championSplash.popover("hide");
         });
 
         this.socket.setListener("play", (data) => {
             $(".champion").text(`You are drawing: ${data.word}`);
             $championSplash.removeClass("hidden");
             let img = `<img src="${data.image}" alt="${data.word}" title="${data.word}" style="width:100%;"/>`;
-            $('#champSplash').popover({
+            $championSplash.popover('dispose').popover({
                 placement: 'bottom',
                 content: img,
                 html: true

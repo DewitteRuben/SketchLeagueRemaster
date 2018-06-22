@@ -40,8 +40,9 @@ Game.prototype.startNextRound = function () {
     this.played = [];
     this.correctGuesses = [];
     this.io.sockets.emit("chat-message", {message: `Round ${this.round}`, sender: "Server", type: "server"});
-    this.waitAndSwitchToNextPlayer();
-    this.getNewWord();
+    // this.waitAndSwitchToNextPlayer();
+    // this.getNewWord();
+    this.initNextPlayer();
 };
 
 Game.prototype.getNextPlayer = function () {
@@ -111,13 +112,17 @@ Player.prototype.addScore = function (score, position) {
     this.score += score - (100 * position);
 };
 
+Game.prototype.initNextPlayer = function() {
+    this.getNewWord();
+    let nextPlayer = this.getNextPlayer();
+    this.played.push(nextPlayer);
+    this.passControls(nextPlayer);
+    this.timer.reset();
+};
+
 Game.prototype.switchToNextPlayer = function () {
     if (!this.isNextRound()) {
-        this.getNewWord();
-        let nextPlayer = this.getNextPlayer();
-        this.played.push(nextPlayer);
-        this.passControls(nextPlayer);
-        this.timer.reset();
+        this.initNextPlayer();
     } else {
         this.startNextRound();
     }
@@ -160,9 +165,11 @@ Game.prototype.enableSuddenDeath = function () {
 
 };
 
-Game.prototype.initTimer = function () {
+Game.prototype.startTimer = function() {
     this.timer.start({countdown: true, startValues: {seconds: this.roundTime}});
+};
 
+Game.prototype.initTimer = function () {
     this.timer.addEventListener('secondsUpdated', (e) => {
         this.io.sockets.emit("time", this.timer.getTimeValues().toString(['minutes', 'seconds']))
     });
@@ -173,7 +180,7 @@ Game.prototype.initTimer = function () {
 };
 
 Game.prototype.waitAndSwitchToNextPlayer = function () {
-    this.timer.pause();
+    // this.timer.pause();
     this.io.sockets.emit("nextPlayer");
     this.io.sockets.emit("chat-message", {
         message: `The correct answer was: ${this.word}!`,
@@ -223,6 +230,7 @@ Game.prototype.start = function (users) {
         this.started = true;
         this.players = users2players(users);
         this.initTimer();
+        this.startTimer();
         this.switchToNextPlayer();
     }
 };
