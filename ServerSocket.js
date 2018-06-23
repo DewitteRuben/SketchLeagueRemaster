@@ -89,8 +89,7 @@ function ServerSocket(io, game) {
             return socket.id === Object.keys(self.userstorage.users)[0];
         }
 
-        socket.on("startServer", function () {
-
+        socket.on("startServer", function (settings) {
             if (self.userstorage.amount < 2) {
                 socket.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_TWO_PLAYERS_TO_START);
                 return;
@@ -98,7 +97,7 @@ function ServerSocket(io, game) {
 
             // check if clicker is actually the host!
             if (isHost()) {
-                self.game.start(self.userstorage.users);
+                self.game.start(self.userstorage.users, settings);
             } else if (isHost() && self.game.started) {
                 socket.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_ALREADY_STARTED);
             } else {

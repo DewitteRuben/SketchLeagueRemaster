@@ -55,6 +55,7 @@ const SERVER_MESSAGES = {
     GAME_NOT_HOST:serverMessage(MESSAGES.GAME_NOT_HOST),
     GAME_HOST_CAN_START:serverMessage(MESSAGES.GAME_HOST_CAN_START),
     GAME_TWO_PLAYERS_TO_START:serverMessage(MESSAGES.GAME_TWO_PLAYERS_TO_START),
+    GAME_ROUND_LIMIT_REACHED:serverMessage("The round limit has been reached!"),
 };
 
 

@@ -356,11 +356,51 @@ const Domain = (function () {
     }
 
 
+    function Settings(socket) {
+        this.socket = socket;
+        this.roundTime = 120;
+        this.rounds = 6;
+        this.suddenDeath = false;
+        this.init();
+    }
+
+    Settings.prototype.init = function () {
+        let content = `<form id="settingsForm" class="settingsForm">
+                                <label for="roundTime">Time / round (secs):</label>
+                                <input class="form-control" min="30" max="3600" value="120" type="number" id="roundTime"
+                                       name="roundTime"/>
+                                <label for="rounds">Amount of rounds:</label>
+                                <input class="form-control" min="1" max="99" value="6" type="number" id="rounds"
+                                       name="rounds"/>
+                                <label for="suddenDeath">Sudden death:</label>
+                                <input type="checkbox" id="suddenDeath" name="suddenDeath"/>
+
+                                <button type="submit" class="btn btn-primary" style="display:block">Save</button>
+                            </form>`;
+        $(".settings").popover({
+            placement: 'bottom',
+            content: content,
+            html: true
+        });
+        let self = this;
+        $("body").on("submit", ".settingsForm", function(e) {
+            e.preventDefault();
+            let c = $(this).serializeArray().reduce(function(accumulator, currentValue) {
+                accumulator.push(parseInt(currentValue.value));
+                return accumulator;
+            }, []);
+            self.roundTime = c[0];
+            self.rounds = c[1];
+            self.suddenDeath = c.length > 2;
+        });
+    };
+
     function Controller(name) {
-        this.socket = new Domain.Socket();
-        this.chat = new Domain.Chat("chatbox", name, this.socket);
-        this.sketch = new Domain.SketchPanel("sketch", this.socket);
-        this.pallet = new Domain.Pallet(this.sketch);
+        this.socket = new Socket();
+        this.chat = new Chat("chatbox", name, this.socket);
+        this.sketch = new SketchPanel("sketch", this.socket);
+        this.pallet = new Pallet(this.sketch);
+        this.settings = new Settings();
         this.initChatListeners();
         this.initTimerListeners();
         this.initGameListeners();
@@ -394,8 +434,28 @@ const Domain = (function () {
         });
     };
 
+    Controller.prototype.startGame = function () {
+        this.socket.emit("startServer", this.settings);
+    };
+
     Controller.prototype.initGameListeners = function () {
         let $championSplash = $(".champSplash");
+
+        this.socket.setListener(SOCKET_EVENTS.IDLE, () => {
+            $(".champion").text("");
+            $(".timer").text("WAITING FOR OTHERS...");
+            $championSplash.addClass("hidden");
+            this.sketch.disableControls();
+            $(".pallet").addClass("hidden");
+            $championSplash.popover("hide");
+            $(".settings").removeClass("hidden");
+            $(".start").removeClass("hidden");
+        });
+
+        this.socket.setListener(SOCKET_EVENTS.GAME_STARTED, () => {
+            $(".settings").addClass("hidden");
+            $(".start").addClass("hidden");
+        });
 
         this.socket.setListener(SOCKET_EVENTS.WAIT, (player) => {
             $(".champion").text(`${player} is currently drawing...`);

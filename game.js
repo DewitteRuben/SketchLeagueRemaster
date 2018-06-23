@@ -44,7 +44,12 @@ Game.prototype.startNextRound = function () {
     this.played = [];
     this.correctGuesses = [];
     this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(this.round).GAME_ROUND);
-    this.initNextPlayer();
+    if ((this.settings.rounds + 1) === this.round) {
+        this.stop();
+        this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_ROUND_LIMIT_REACHED);
+    } else {
+        this.initNextPlayer();
+    }
 };
 
 Game.prototype.getNextPlayer = function () {
@@ -59,6 +64,10 @@ Game.prototype.getNextPlayer = function () {
 
 Game.prototype.isNextRound = function () {
     return this.players.getLength() === this.played.length || this.haveAllGuessedCorrectly();
+};
+
+Game.prototype.isFinished = function () {
+
 };
 
 Game.prototype.passControls = function (player) {
@@ -111,7 +120,7 @@ Player.prototype.addScore = function (score, position) {
     this.score += score - (100 * position);
 };
 
-Game.prototype.initNextPlayer = function() {
+Game.prototype.initNextPlayer = function () {
     this.getNewWord();
     let nextPlayer = this.getNextPlayer();
     this.played.push(nextPlayer);
@@ -131,7 +140,7 @@ function Game() {
     this.started = false;
     this.players = null;
     this.io = null;
-    this.roundTime = 120;
+    this.settings = null;
     this.score = new Score();
     this.played = [];
     this.currentPlayer = null;
@@ -161,8 +170,8 @@ Game.prototype.isPlaying = function (id) {
     return this.players.findById(id).isDrawing;
 };
 
-Game.prototype.startTimer = function() {
-    this.timer.start({countdown: true, startValues: {seconds: this.roundTime}});
+Game.prototype.startTimer = function () {
+    this.timer.start({countdown: true, startValues: {seconds: this.settings.roundTime}});
 };
 
 Game.prototype.initTimer = function () {
@@ -199,7 +208,7 @@ Game.prototype.reset = function () {
     this.word = null;
 };
 
-Game.prototype.isGuessing = function(id) {
+Game.prototype.isGuessing = function (id) {
     return !this.isPlaying(id) && !this.hasAlreadyAnswered(id);
 };
 
@@ -208,6 +217,7 @@ Game.prototype.stop = function () {
         this.reset();
         this.timer.stop();
         this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_STOPPED);
+        this.io.sockets.emit(SOCKET_EVENTS.IDLE);
     }
 };
 
@@ -221,10 +231,12 @@ function users2players(users) {
     return players;
 }
 
-Game.prototype.start = function (users) {
+Game.prototype.start = function (users, settings) {
     if (!this.started) {
         this.started = true;
+        this.io.sockets.emit(SOCKET_EVENTS.GAME_STARTED);
         this.players = users2players(users);
+        this.settings = settings;
         this.initTimer();
         this.startTimer();
         this.switchToNextPlayer();

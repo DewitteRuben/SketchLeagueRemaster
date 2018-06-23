@@ -7,7 +7,9 @@ const SOCKET_EVENTS = {
     TIME:"time",
     WAIT:"wait",
     PLAY:"play",
+    IDLE:"idle",
     NEXT_PLAYER:"nextPlayer",
+    GAME_STARTED:"gameStarted",
     UNDO:"undo"
 };
 
