@@ -1,11 +1,12 @@
 let UserStorage = require("./UserStorage");
 let ChatHelper = require("./ChatHelper");
+let constants = require("./messages");
+let SOCKET_EVENTS = require("./shared-js/socket-events");
 
 function userConnectMessage(user, amount, disconnect) {
     let status = disconnect ? "disconnected" : "connected";
     return `${user} ${status}, current users: ${amount}`;
 }
-
 
 function ServerSocket(io, game) {
     this.userstorage = new UserStorage();
@@ -16,30 +17,22 @@ function ServerSocket(io, game) {
     io.on('connection', function (socket) {
         io.sockets.emit("all", socket.id);
 
+        socket.emit(SOCKET_EVENTS.NEW, "");
 
-        socket.emit("new", "");
-
-        socket.on("new", function (data) {
+        socket.on(SOCKET_EVENTS.NEW, function (data) {
 
             self.userstorage.add(data.id, data.user);
 
-            io.sockets.emit("userList", {
+            io.sockets.emit(SOCKET_EVENTS.USER_LIST, {
                 message: self.userstorage.users,
                 host: self.userstorage.getHost(),
             });
 
-            io.sockets.emit("chat-message", {
-                sender: "Server",
-                message: userConnectMessage(data.user, self.userstorage.amount),
-                type: "server"
-            });
+            io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE,
+                constants.PARAMETER_MESSAGES(data.user, self.userstorage.amount).USER_DISCONNECT_MESSAGE);
 
             if (self.userstorage.amount >= 2) {
-                io.sockets.emit("chat-message", {
-                    sender: "Server",
-                    message: "The host has the ability to start the game!",
-                    type: "server"
-                });
+                io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_HOST_CAN_START);
             }
         });
 
@@ -54,17 +47,14 @@ function ServerSocket(io, game) {
             let newAmount = self.userstorage.amount - 1;
 
             // send using a chat message to all the clients that the user will be disconnected
-            io.sockets.emit("chat-message", {
-                sender: "Server",
-                message: userConnectMessage(user, newAmount, true),
-                type: "server"
-            });
+            io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE,
+                constants.PARAMETER_MESSAGES(user, newAmount, true).USER_DISCONNECT_MESSAGE);
 
             // drop the user from storage
             self.userstorage.drop(socket.id);
 
             // update the active user list
-            io.sockets.emit("userList", {
+            io.sockets.emit(SOCKET_EVENTS.USER_LIST, {
                 message: self.userstorage.users,
                 host: self.userstorage.getHost(),
             });
@@ -73,34 +63,23 @@ function ServerSocket(io, game) {
 
         socket.on("disconnect", function (reason) {
             // stop the current game if someone disconnects
-
             console.log("disconnected", socket.id, reason);
-
             if (self.game.started) {
                 self.game.stop();
             }
         });
 
         socket.on("client", function (data, cb) {
-            socket.broadcast.emit("chat-message", {sender: data.user, message: data.message, type: "other"});
-
+            socket.broadcast.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.userMessage(data.user, data.message));
             if (self.game.started) {
                 let chathelper = new ChatHelper(self.game.word, data.message);
-                if (chathelper.isEqual() && !self.game.isPlaying(socket.id) && !self.game.hasAlreadyAnswered(socket.id)) {
-                    io.sockets.emit("chat-message", {
-                        sender: "Server",
-                        message: `${data.user} found the answer!`,
-                        type: "server"
-                    });
+                if (chathelper.isEqual() && self.game.isGuessing(socket.id)) {
+                    io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(data.user).GAME_FOUND_ANSWER);
                     self.game.wasCorrectlyAnsweredBy(socket.id);
-                } else if (!chathelper.isEqual() && !self.game.isPlaying(socket.id) && !self.game.hasAlreadyAnswered(socket.id)) {
+                } else if (!chathelper.isEqual() && self.game.isGuessing(socket.id)) {
                     let lettersOff = chathelper.getLettersOff();
                     if (lettersOff <= 2) {
-                        socket.emit("chat-message", {
-                            sender: "Server",
-                            message: `You are ${lettersOff} ${lettersOff > 1 ? "letters" : "letter"} off`,
-                            type: "server"
-                        });
+                        socket.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(lettersOff).GAME_LETTERS_OFF);
                     }
                 }
             }
@@ -113,11 +92,7 @@ function ServerSocket(io, game) {
         socket.on("startServer", function () {
 
             if (self.userstorage.amount < 2) {
-                socket.emit("chat-message", {
-                    sender: "Server",
-                    message: "You need at least 2 players to start!",
-                    type: "server"
-                });
+                socket.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_TWO_PLAYERS_TO_START);
                 return;
             }
 
@@ -125,21 +100,17 @@ function ServerSocket(io, game) {
             if (isHost()) {
                 self.game.start(self.userstorage.users);
             } else if (isHost() && self.game.started) {
-                socket.emit("chat-message", {sender: "Server", message: "The game already started!", type: "server"});
+                socket.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_ALREADY_STARTED);
             } else {
-                socket.emit("chat-message", {
-                    sender: "Server",
-                    message: "You're not the host of this room!",
-                    type: "server"
-                })
+                socket.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_NOT_HOST);
             }
         });
 
-        socket.on("draw", function (data) {
-            socket.broadcast.emit("draw", data);
+        socket.on(SOCKET_EVENTS.DRAW, function (data) {
+            socket.broadcast.emit(SOCKET_EVENTS.DRAW, data);
         });
-        socket.on("undo", function (data) {
-            socket.broadcast.emit("undo", data);
+        socket.on(SOCKET_EVENTS.UNDO, function (data) {
+            socket.broadcast.emit(SOCKET_EVENTS.UNDO, data);
         });
     });
 }

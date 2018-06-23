@@ -6,7 +6,7 @@ function UserStorage() {
 }
 
 UserStorage.prototype.add = function (socketID, user) {
-    if (!(this.users[socketID])) {
+    if (!(this.users[socketID]) && !Object.values(this.users).includes(user)) {
         this.users[socketID] = user;
         this.amount++;
     } else {

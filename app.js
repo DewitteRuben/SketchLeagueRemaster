@@ -21,7 +21,7 @@ app.use(session({
 }));
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended: false}));
-app.use("/assets/js/", express.static(path.join(__dirname, 'shared-javascript')));
+app.use("/assets/js/", express.static(path.join(__dirname, 'shared-js')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 

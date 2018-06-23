@@ -7,7 +7,7 @@ const Domain = (function () {
     };
 
     function Socket() {
-        this.socket = io();
+        this.socket = io({transports: ['websocket'], upgrade: false});
     }
 
     Socket.prototype.setListener = function (event, fn) {
@@ -78,10 +78,10 @@ const Domain = (function () {
         this.socket = socket;
 
         if (this.socket) {
-            this.socket.setListener("draw", (data) => {
+            this.socket.setListener(SOCKET_EVENTS.DRAW, (data) => {
                 this.drawOther(data);
             });
-            this.socket.setListener("undo", (data) => {
+            this.socket.setListener(SOCKET_EVENTS.UNDO, (data) => {
                 this.clear();
                 this.drawOther(data);
             });
@@ -119,7 +119,7 @@ const Domain = (function () {
                     sketch.line(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY);
                     _this.strokeStorage.addDot(sketch.pmouseX, sketch.pmouseY);
                     if (_this.socket) {
-                        _this.socket.emit("draw", _this.strokeStorage.lastStroke);
+                        _this.socket.emit(SOCKET_EVENTS.DRAW, _this.strokeStorage.lastStroke);
                     }
                 }
 
@@ -138,7 +138,7 @@ const Domain = (function () {
     SketchPanel.prototype.undo = function () {
         this.clear();
         this.strokeStorage.removeLastStroke();
-        if (this.socket) this.socket.emit("undo", this.strokeStorage.strokes);
+        if (this.socket) this.socket.emit(SOCKET_EVENTS.UNDO, this.strokeStorage.strokes);
         this.strokeStorage.strokes.forEach(coordinates => this.draw(coordinates));
     };
 
@@ -367,18 +367,18 @@ const Domain = (function () {
     }
 
     Controller.prototype.initChatListeners = function () {
-        this.socket.setListener("new", () => {
-            this.socket.emit("new", {user: this.chat.user, id: this.socket.getID()});
+        this.socket.setListener(SOCKET_EVENTS.NEW, () => {
+            this.socket.emit(SOCKET_EVENTS.NEW, {user: this.chat.user, id: this.socket.getID()});
         });
-        this.socket.setListener("chat-message", (data) => {
+        this.socket.setListener(SOCKET_EVENTS.CHAT_MESSAGE, (data) => {
             this.chat.printInChatbox(data.sender, data.message, data.type);
         });
 
-        this.socket.setListener("userList", (data) => {
+        this.socket.setListener(SOCKET_EVENTS.USER_LIST, (data) => {
             this.chat.updateUserList(data.message, data.host, this.socket.getID());
         });
 
-        this.socket.setListener("updateStatus", (data) => {
+        this.socket.setListener(SOCKET_EVENTS.UPDATE_STATUS, (data) => {
             data.forEach(e => {
                 let $player = $(`#${e.id}`);
                 $player.find(".status").html(e.isDrawing ?
@@ -389,7 +389,7 @@ const Domain = (function () {
     };
 
     Controller.prototype.initTimerListeners = function () {
-        this.socket.setListener("time", (time) => {
+        this.socket.setListener(SOCKET_EVENTS.TIME, (time) => {
             $(".timer").text(time);
         });
     };
@@ -397,7 +397,7 @@ const Domain = (function () {
     Controller.prototype.initGameListeners = function () {
         let $championSplash = $(".champSplash");
 
-        this.socket.setListener("wait", (player) => {
+        this.socket.setListener(SOCKET_EVENTS.WAIT, (player) => {
             $(".champion").text(`${player} is currently drawing...`);
             $championSplash.addClass("hidden");
             this.sketch.disableControls();
@@ -405,7 +405,7 @@ const Domain = (function () {
             $championSplash.popover("hide");
         });
 
-        this.socket.setListener("play", (data) => {
+        this.socket.setListener(SOCKET_EVENTS.PLAY, (data) => {
             $(".champion").text(`You are drawing: ${data.word}`);
             $championSplash.removeClass("hidden");
             let img = `<img src="${data.image}" alt="${data.word}" title="${data.word}" style="width:100%;"/>`;
@@ -418,7 +418,7 @@ const Domain = (function () {
             $(".pallet").removeClass("hidden");
         });
 
-        this.socket.setListener("nextPlayer", data => {
+        this.socket.setListener(SOCKET_EVENTS.NEXT_PLAYER, data => {
             $(".timer").text("SWITCHING PLAYER...");
         });
     };

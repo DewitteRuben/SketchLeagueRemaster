@@ -1,6 +1,9 @@
+const SOCKET_EVENTS = require("./shared-js/socket-events");
+
 let championsData = require('./champion.json');
 let Timer = require('easytimer.js');
 let compareBase = require("./util");
+let constants = require("./messages");
 
 function getChampions() {
     let champions = [];
@@ -40,7 +43,7 @@ Game.prototype.startNextRound = function () {
     this.round++;
     this.played = [];
     this.correctGuesses = [];
-    this.io.sockets.emit("chat-message", {message: `Round ${this.round}`, sender: "Server", type: "server"});
+    this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(this.round).GAME_ROUND);
     this.initNextPlayer();
 };
 
@@ -61,14 +64,10 @@ Game.prototype.isNextRound = function () {
 Game.prototype.passControls = function (player) {
     let playerObj = this.players.findById(player);
     this.players.setAsArtist(player);
-    this.io.sockets.emit("updateStatus", this.players.getList());
-    this.io.sockets.emit("wait", playerObj.name);
-    this.io.to(player).emit("play", {word: this.word, image: this.image});
-    this.io.sockets.emit("chat-message", {
-        message: `${playerObj.name} is now drawing!`,
-        sender: "Server",
-        type: "server"
-    });
+    this.io.sockets.emit(SOCKET_EVENTS.UPDATE_STATUS, this.players.getList());
+    this.io.sockets.emit(SOCKET_EVENTS.WAIT, playerObj.name);
+    this.io.to(player).emit(SOCKET_EVENTS.PLAY, {word: this.word, image: this.image});
+    this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(playerObj.name).GAME_IS_DRAWING);
 };
 
 function PlayerRepo() {
@@ -168,7 +167,7 @@ Game.prototype.startTimer = function() {
 
 Game.prototype.initTimer = function () {
     this.timer.addEventListener('secondsUpdated', (e) => {
-        this.io.sockets.emit("time", this.timer.getTimeValues().toString(['minutes', 'seconds']))
+        this.io.sockets.emit(SOCKET_EVENTS.TIME, this.timer.getTimeValues().toString(['minutes', 'seconds']))
     });
     this.timer.addEventListener('targetAchieved', (e) => {
         this.waitAndSwitchToNextPlayer();
@@ -178,12 +177,8 @@ Game.prototype.initTimer = function () {
 
 Game.prototype.waitAndSwitchToNextPlayer = function () {
     this.timer.pause();
-    this.io.sockets.emit("nextPlayer");
-    this.io.sockets.emit("chat-message", {
-        message: `The correct answer was: ${this.word}!`,
-        sender: "Server",
-        type: "server"
-    });
+    this.io.sockets.emit(SOCKET_EVENTS.NEXT_PLAYER);
+    this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(this.word).GAME_CORRECT_ANSWER);
     setTimeout(() => {
         this.switchToNextPlayer();
     }, 3500);
@@ -204,11 +199,15 @@ Game.prototype.reset = function () {
     this.word = null;
 };
 
+Game.prototype.isGuessing = function(id) {
+    return !this.isPlaying(id) && !this.hasAlreadyAnswered(id);
+};
+
 Game.prototype.stop = function () {
     if (this.started) {
         this.reset();
         this.timer.stop();
-        this.io.sockets.emit("chat-message", {message: "The game has been stopped!", sender: "Server", type: "server"});
+        this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_STOPPED);
     }
 };
 
