@@ -43,22 +43,23 @@ Game.prototype.startNextRound = function () {
     this.round++;
     this.played = [];
     this.correctGuesses = [];
-    this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(this.round).GAME_ROUND);
     if ((this.settings.rounds + 1) === this.round) {
         this.stop();
         this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.SERVER_MESSAGES.GAME_ROUND_LIMIT_REACHED);
     } else {
+        this.io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(this.round).GAME_ROUND);
         this.initNextPlayer();
     }
 };
 
 Game.prototype.getNextPlayer = function () {
-    let nextPlayer = this.players.getRandomPlayer().id;
-    while (this.played.includes(nextPlayer)) {
-        nextPlayer = this.players.getRandomPlayer().id;
-    }
-    this.currentPlayer = this.players.findById(nextPlayer);
-    return nextPlayer;
+    // let nextPlayer = this.players.getRandomPlayer().id;
+    // while (this.played.includes(nextPlayer)) {
+    //     nextPlayer = this.players.getRandomPlayer().id;
+    // }
+    let nextPlayer = this.players.getNext();
+    this.currentPlayer = nextPlayer;
+    return nextPlayer.id;
 };
 
 
@@ -81,11 +82,19 @@ Game.prototype.passControls = function (player) {
 
 function PlayerRepo() {
     this.players = [];
+    this.currentIndex = 0;
 }
 
 PlayerRepo.prototype.setAsArtist = function (id) {
     this.players.forEach(p => p.isDrawing = false);
     this.findById(id).isDrawing = true;
+};
+
+PlayerRepo.prototype.getNext = function() {
+    if (this.currentIndex + 1 > this.players.length) {
+        this.currentIndex = 0;
+    }
+    return this.players[this.currentIndex++];
 };
 
 PlayerRepo.prototype.getList = function () {

@@ -25,7 +25,6 @@ const Domain = (function () {
     function StrokeStorage() {
         this.strokes = [];
         this.lastStroke = [];
-        this.amtStrokes = 0;
         this.amtDots = 0;
     }
 
@@ -37,29 +36,22 @@ const Domain = (function () {
         this.lastStroke.push(stroke);
     };
 
-    StrokeStorage.prototype.addDot = function (x, y) {
-        var curStroke = this.strokes[this.amtStrokes];
+    StrokeStorage.prototype.addDot = function (x1, y1, x2, y2) {
+        var curStroke = this.strokes[this.strokes.length === 0 ? 0 : this.strokes.length - 1];
         var lastStroke = this.lastStroke[0];
-        curStroke[this.amtDots] = [x, y];
-        lastStroke[this.amtDots] = [x, y];
+        curStroke[this.amtDots] = [x1, y1, x2, y2];
+        lastStroke[this.amtDots] = [x1, y1, x2, y2];
         this.amtDots++;
     };
 
     StrokeStorage.prototype.endStroke = function () {
         this.amtDots = 0;
-        this.amtStrokes++;
-    };
-
-
-// TODO possible optimalisation: remove all duplicate dot coordinates
-    StrokeStorage.prototype.removeDuplicates = function () {
-
+        this.lastStroke = [];
     };
 
     StrokeStorage.prototype.removeLastStroke = function () {
-        if (this.amtStrokes > 0) {
+        if (this.strokes.length > 0) {
             this.strokes.pop();
-            this.amtStrokes--;
         }
     };
 
@@ -89,7 +81,6 @@ const Domain = (function () {
 
 
         function init(sketch) {
-
             sketch.setup = function () {
                 _this.renderer = sketch.createCanvas(width || _this.container.offsetWidth, height || _this.container.offsetHeight);
                 _this.setEventListeners();
@@ -102,27 +93,22 @@ const Domain = (function () {
                 var brushColor = _this.eraser ? _this.backgroundColor : _this.currentColor;
                 sketch.stroke(brushColor);
                 _this.strokeStorage.initStroke(brushColor, _this.brushSize);
+                sketch.point(sketch.mouseX, sketch.mouseY);
+                _this.strokeStorage.addDot(sketch.mouseX, sketch.mouseY);
+                _this.emitLastStroke();
                 return false;
             };
 
             sketch.mouseReleased = function () {
-                _this.strokeStorage.addDot(sketch.pmouseX, sketch.pmouseY);
                 _this.strokeStorage.endStroke();
-                _this.strokeStorage.lastStroke.pop();
                 return false;
             };
 
-            // for some reason have these 2 functions with the same name breaks the draw feature
-            // TODO fix: When holding down click button it will continously send data of the same location
-            sketch.draw = function () {
-                if (sketch.mouseIsPressed) {
-                    sketch.line(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY);
-                    _this.strokeStorage.addDot(sketch.pmouseX, sketch.pmouseY);
-                    if (_this.socket) {
-                        _this.socket.emit(SOCKET_EVENTS.DRAW, _this.strokeStorage.lastStroke);
-                    }
-                }
-
+            sketch.mouseDragged = function () {
+                sketch.line(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY);
+                _this.strokeStorage.addDot(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY);
+                _this.emitLastStroke();
+                return false;
             };
         }
 
@@ -133,6 +119,12 @@ const Domain = (function () {
         this.p5 = new p5(init, this.container);
 
     }
+
+    SketchPanel.prototype.emitLastStroke = function () {
+        if (this.socket) {
+            this.socket.emit(SOCKET_EVENTS.DRAW, this.strokeStorage.lastStroke);
+        }
+    };
 
 // TODO fix that other player can undo everyone else even though he or she is not drawing
     SketchPanel.prototype.undo = function () {
@@ -168,16 +160,23 @@ const Domain = (function () {
     };
 
     SketchPanel.prototype.disableControls = function () {
-        this.clear(true);
+        this.resetMouse();
         this.p5.mousePressed = null;
         this.p5.mouseReleased = null;
-        this.p5.draw = null;
+        this.p5.mouseDragged = null;
         this.drawing = false;
+        this.clear(true);
+    };
+
+    SketchPanel.prototype.resetMouse = function() {
+        $(this.container).trigger("mouseup");
     };
 
     SketchPanel.prototype.enableControls = function () {
+        this.disableControls();
         this.reloadSetup();
         this.drawing = true;
+        this.clear(true);
     };
 
     SketchPanel.prototype.setEventListeners = function () {
@@ -201,19 +200,14 @@ const Domain = (function () {
         this.p5.stroke(coordinates.color ? coordinates.color : this.defaultColor);
         this.p5.strokeWeight(coordinates.brushSize ? coordinates.brushSize : this.brushSize);
         for (var key in coordinates) {
-            if (coordinates.hasOwnProperty(key)) {
-
-                var keyPlusOne = parseInt(key) + 1;
+            if (coordinates.hasOwnProperty(key) && !isNaN(parseInt(key))) {
                 var x1 = coordinates[key][0];
                 var y1 = coordinates[key][1];
-
-                this.p5.point(x1, y1);
-
-                if (coordinates[keyPlusOne]) {
-
-                    var x2 = coordinates[keyPlusOne][0];
-                    var y2 = coordinates[keyPlusOne][1];
-
+                var x2 = coordinates[key][2];
+                var y2 = coordinates[key][3];
+                if (!x2 || !y2) {
+                    this.p5.point(x1, y1);
+                } else {
                     this.p5.line(x1, y1, x2, y2);
                 }
             }
@@ -254,16 +248,20 @@ const Domain = (function () {
     Pallet.prototype.eraseHandler = function (sketch) {
         return function () {
             sketch.enableEraser();
-            $(this).prev().button("toggle");
-            $(this).button("toggle");
+            $(this).parents(".tools").find("button").each((i, e) => {
+                $(e).removeClass("active");
+            });
+            $(this).addClass("active");
         }
     };
 
     Pallet.prototype.brushHandler = function (sketch) {
         return function () {
             sketch.enablePencil();
-            $(this).next().button("toggle");
-            $(this).button("toggle");
+            $(this).parents(".tools").find("button").each((i, e) => {
+                $(e).removeClass("active");
+            });
+            $(this).addClass("active");
         }
     };
 
@@ -333,12 +331,10 @@ const Domain = (function () {
                 let username = userList[socketID];
                 let isMe = socketID === me ? "(me)" : "";
                 let isHost = socketID === host ? "<i class='fas fa-key'></i>" : "";
-
                 let HTML = `<div class="user" id="${socketID}">
                    <p class="name">${username} ${isMe}</p><span class="privileges">${isHost} <span class="status"></span> </span>
                    <p class="score">0</p>
                 </div>`;
-
                 $userList.append(HTML);
             }
         }
@@ -383,9 +379,9 @@ const Domain = (function () {
             html: true
         });
         let self = this;
-        $("body").on("submit", ".settingsForm", function(e) {
+        $("body").on("submit", ".settingsForm", function (e) {
             e.preventDefault();
-            let c = $(this).serializeArray().reduce(function(accumulator, currentValue) {
+            let c = $(this).serializeArray().reduce(function (accumulator, currentValue) {
                 accumulator.push(parseInt(currentValue.value));
                 return accumulator;
             }, []);
@@ -463,6 +459,7 @@ const Domain = (function () {
             this.sketch.disableControls();
             $(".pallet").addClass("hidden");
             $championSplash.popover("hide");
+            this.sketch.clear();
         });
 
         this.socket.setListener(SOCKET_EVENTS.PLAY, (data) => {
@@ -476,6 +473,7 @@ const Domain = (function () {
             });
             this.sketch.enableControls();
             $(".pallet").removeClass("hidden");
+            this.sketch.clear();
         });
 
         this.socket.setListener(SOCKET_EVENTS.NEXT_PLAYER, data => {
