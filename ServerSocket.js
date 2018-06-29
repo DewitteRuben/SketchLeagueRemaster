@@ -70,7 +70,7 @@ function ServerSocket(io, game) {
         });
 
         socket.on("client", function (data, cb) {
-            socket.broadcast.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.userMessage(data.user, data.message));
+            socket.broadcast.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.userMessage(data.message, data.user));
             if (self.game.started) {
                 let chathelper = new ChatHelper(self.game.word, data.message);
                 if (chathelper.isEqual() && self.game.isGuessing(socket.id)) {
