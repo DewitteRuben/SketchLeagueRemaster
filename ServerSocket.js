@@ -70,19 +70,30 @@ function ServerSocket(io, game) {
         });
 
         socket.on("client", function (data, cb) {
-            socket.broadcast.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.userMessage(data.message, data.user));
+            let send = true;
+
             if (self.game.started) {
                 let chathelper = new ChatHelper(self.game.word, data.message);
+
                 if (chathelper.isEqual() && self.game.isGuessing(socket.id)) {
+
                     io.sockets.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(data.user).GAME_FOUND_ANSWER);
                     self.game.wasCorrectlyAnsweredBy(socket.id);
+                    send = false;
                 } else if (!chathelper.isEqual() && self.game.isGuessing(socket.id)) {
+
                     let lettersOff = chathelper.getLettersOff();
                     if (lettersOff <= 2) {
                         socket.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.PARAMETER_MESSAGES(lettersOff).GAME_LETTERS_OFF);
                     }
+
                 }
             }
+
+            if (send) {
+                socket.broadcast.emit(SOCKET_EVENTS.CHAT_MESSAGE, constants.userMessage(data.message, data.user));
+            }
+
         });
 
         function isHost() {
