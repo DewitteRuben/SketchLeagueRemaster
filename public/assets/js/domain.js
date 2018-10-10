@@ -342,7 +342,8 @@ const Domain = (function () {
 
     Chat.prototype.printInChatbox = function (sender, message, type) {
         var chatbox = $(`#${this.chatbox}`);
-        chatbox.append(`<li><span class="${type}">${sender}:</span> ${message}</li>`)
+        var element = $(`<li><span class="${type}">${sender}:</span> ${message}</li>`);
+        chatbox.append(element.text());
         chatbox[0].scrollTop = chatbox[0].scrollHeight;
     };
 
